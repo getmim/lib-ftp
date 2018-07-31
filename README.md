@@ -26,8 +26,7 @@ $opts = [
     'user' => [
         'name'      => 'user',
         'password'  => '/secret/'
-    ],
-    'base' => '/home/iqbal'
+    ]
 ];
 $ftp = new LibFtp\Library\Ftp($opts);
 if($ftp->getError())
@@ -54,7 +53,7 @@ Nilai property `$type` yang diterima adalah `text` dan `binary`.
 
 ### isDir(string $path): bool
 
-### read(string $path, string $type='text', int $post): ?string
+### read(string $path, string $type='text', int $pos=0): ?string
 
 Nilai property `$type` yang diterima adalah `text` dan `binary`.
 
