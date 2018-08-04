@@ -15,4 +15,11 @@ class PHP
             'info' => ''
         ];
     }
+
+    static function openssl(){
+        return [
+            'success' => extension_loaded('openssl'),
+            'info' => ''
+        ];
+    }
 }

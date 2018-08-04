@@ -2,14 +2,14 @@
 /**
  * Ftp
  * @package lib-ftp
- * @version 0.0.1
+ * @version 0.0.2
  */
 
-namespace LibFtp\Library;
+namespace LibFtp\Handler;
 
 use \Mim\Library\Fs;
 
-class Ftp
+class Ftp implements \LibFtp\Iface\Handler
 {
 
     private $error;
@@ -23,8 +23,8 @@ class Ftp
         if(!isset($server['timeout']))
             $server['timeout'] = 90;
 
-        $ssl = $server['ssl'] ?? null;
-        $func = $ssl ? 'ftp_ssl_connect' : 'ftp_connect';
+        $ssl = $opts['type'] ?? 'ftp';
+        $func = $ssl === 'ftps' ? 'ftp_ssl_connect' : 'ftp_connect';
 
         $this->conn = call_user_func_array($func, [
             $server['host'],
@@ -161,9 +161,10 @@ class Ftp
     }
 
     public function scan(string $path): array {
-        $files = ftp_nlist($this->conn, $path);
+        $files = ftp_mlsd($this->conn, $path);
         if(!$files)
             return [];
+        $files = array_column($files, 'name');
         return array_values(array_diff($files, ['.','..']));
     }
 
