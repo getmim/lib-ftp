@@ -131,7 +131,9 @@ class Ftp implements \LibFtp\Iface\Handler
         $result = ftp_get($this->conn, $tmp, $path, $mode, $pos);
         if(false === $result)
             return null;
-        return file_get_contents($tmp);
+        $result = file_get_contents($tmp);
+        unlink($tmp);
+        return $result;
     }
 
     public function rename(string $source, string $target): bool {
