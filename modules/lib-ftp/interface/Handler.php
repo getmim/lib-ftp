@@ -20,5 +20,6 @@ interface Handler
     public function rmdir(string $path): bool;
     public function scan(string $path): array;
     public function unlink(string $path): bool;
+    public function upload(string $path, string $source, string $type='text', int $pos=0): bool;
     public function write(string $path, $content, string $type='text', int $pos=0): bool;
 }

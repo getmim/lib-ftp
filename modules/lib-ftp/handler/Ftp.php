@@ -16,6 +16,8 @@ class Ftp implements \LibFtp\Iface\Handler
     private $conn;
     private $base;
 
+    public function _silent(){}
+
     public function __construct(array $opts){
         $server = $opts['server'];
         if(!isset($server['port']))
@@ -26,6 +28,7 @@ class Ftp implements \LibFtp\Iface\Handler
         $ssl = $opts['type'] ?? 'ftp';
         $func = $ssl === 'ftps' ? 'ftp_ssl_connect' : 'ftp_connect';
 
+        set_error_handler([$this, 'setError']);
         $this->conn = call_user_func_array($func, [
             $server['host'],
             $server['port'],
@@ -33,18 +36,19 @@ class Ftp implements \LibFtp\Iface\Handler
         ]);
 
         if(!$this->conn){
-            $this->error = 'Unable to connect to ftp server';
+            restore_error_handler();
             return;
         }
+        restore_error_handler();
 
         if(!isset($opts['user']))
             return;
 
         $user = $opts['user'];
 
-        set_error_handler(function() { /* ignore errors */ });
-        if(!@ftp_login($this->conn, $user['name'], $user['password'])){
-            $this->error = 'Unable to login to the ftp server';
+        set_error_handler([$this, 'setError']);
+        if(!ftp_login($this->conn, $user['name'], $user['password'])){
+            restore_error_handler();
             return;
         }
         restore_error_handler();
@@ -54,8 +58,10 @@ class Ftp implements \LibFtp\Iface\Handler
         $this->base = ftp_pwd($this->conn);
 
         if(isset($opts['base'])){
+            set_error_handler(function(){});
             if(!@ftp_chdir($this->conn, $opts['base']))
                 $this->error = 'Unable to set active directory to ' . $opts['base'];
+            restore_error_handler();
         }
     }
 
@@ -113,18 +119,26 @@ class Ftp implements \LibFtp\Iface\Handler
 
         $paths = explode('/', trim($path, '/'));
         $cpath = '/';
+        $result = true;
+
+        set_error_handler([$this, '_silent']);
         foreach($paths as $path){
             $cpath.= $path . '/';
-            if(!@ftp_chdir($this->conn, $cpath)){
-                if(!@ftp_mkdir($this->conn, $cpath))
-                    return false;
+            if(!ftp_chdir($this->conn, $cpath)){
+                if(!ftp_mkdir($this->conn, $cpath)){
+                    $result = false;
+                    break;
+                }
             }
 
-            if(!@ftp_chdir($this->conn, $cpath))
-                return false;
+            if(!ftp_chdir($this->conn, $cpath)){
+                $result = false;
+                break;
+            }
         }
+        restore_error_handler();
 
-        return true;
+        return $result;
     }
 
     public function read(string $path, string $type='text', int $pos=0): ?string {
@@ -172,8 +186,22 @@ class Ftp implements \LibFtp\Iface\Handler
         return array_values(array_diff($files, ['.','..']));
     }
 
+    public function setError($no, $text, $file, $line): void{
+        $this->error = $text;
+    }
+
     public function unlink(string $path): bool{
         return ftp_delete($this->conn, $path);
+    }
+
+    public function upload(string $path, string $source, string $type='text', int $pos=0): bool{
+        $parent = dirname($path);
+        if(!$this->mkdir($parent))
+            return false;
+
+        $mode = $type === 'text' ? FTP_ASCII : FTP_BINARY;
+        $result = ftp_put($this->conn, $path, $source, $mode, $pos);
+        return $result;
     }
 
     public function write(string $path, $content, string $type='text', int $pos=0): bool {
@@ -185,7 +213,11 @@ class Ftp implements \LibFtp\Iface\Handler
         Fs::write($tmp, $content);
 
         $mode = $type === 'text' ? FTP_ASCII : FTP_BINARY;
+
+        set_error_handler([$this, 'setError']);
         $result = ftp_put($this->conn, $path, $tmp, $mode, $pos);
+        restore_error_handler();
+
         unlink($tmp);
         return $result;
     }

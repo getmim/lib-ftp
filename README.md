@@ -68,6 +68,10 @@ Nilai property `$type` yang diterima adalah `text` dan `binary`.
 
 ### unlink(string $path): bool
 
+### upload(string $path, string $source, string $type='text', int $pos=0): bool
+
+Nilai property `type` yang diterima adalah `text` dan `binary`.
+
 ### write(string $path, $text, string $type='text', int $pos=0): bool
 
 Nilai property `$type` yang diterima adalah `text` dan `binary`.
