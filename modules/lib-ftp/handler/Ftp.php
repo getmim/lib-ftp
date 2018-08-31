@@ -42,10 +42,12 @@ class Ftp implements \LibFtp\Iface\Handler
 
         $user = $opts['user'];
 
+        set_error_handler(function() { /* ignore errors */ });
         if(!@ftp_login($this->conn, $user['name'], $user['password'])){
             $this->error = 'Unable to login to the ftp server';
             return;
         }
+        restore_error_handler();
 
         ftp_pasv($this->conn, true);
 
