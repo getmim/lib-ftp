@@ -46,6 +46,11 @@ kemudian koneksi ftp siap digunakan.
 
 Nilai property `$type` yang diterima adalah `text` dan `binary`.
 
+### download(string $source, string $target, string $type='text', int $pos=0): bool
+
+Download file dari ftp server. Nilai `$source` adalah path file di server, dan `$target`
+adalah target file di lokal.
+
 ### exists(string $path): bool
 
 ### getError(): ?string

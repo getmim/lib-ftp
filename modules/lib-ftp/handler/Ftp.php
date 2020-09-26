@@ -83,6 +83,12 @@ class Ftp implements \LibFtp\Iface\Handler
         return true;
     }
 
+    public function download(string $source, string $target, string $type='text', int $pos=0): bool{
+        $mode = $type === 'text' ? FTP_ASCII : FTP_BINARY;
+        $result = ftp_get($this->conn, $target, $source, $type, $pos);
+        return $result;
+    }
+
     public function exists(string $path): bool {
         $parent = dirname($path);
         $fname  = basename($path);

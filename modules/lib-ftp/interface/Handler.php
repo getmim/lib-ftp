@@ -10,6 +10,7 @@ interface Handler
 {
     public function close(): void;
     public function copy(string $source, string $target, string $type='text'): bool;
+    public function download(string $source, string $target, string $type='text', int $pos=0): bool;
     public function exists(string $path): bool;
     public function getConn();
     public function getError(): ?string;
